@@ -1,1 +1,97 @@
+name: Fetch River Data
 
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes
+  workflow_dispatch:           # allow manual trigger from GitHub UI
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch USGS gauge data and write data.json
+        run: |
+          python3 << 'PYEOF'
+          import urllib.request, json, datetime
+
+          result = {
+            "flow_cfs":  None,
+            "gauge_ft":  None,
+            "timestamp": None,
+            "source":    None
+          }
+
+          # ── Attempt 1: legacy WaterServices (still works server-side) ──
+          try:
+            url = ("https://waterservices.usgs.gov/nwis/iv/"
+                   "?format=json&sites=05406000&parameterCd=00060,00065&period=P1D")
+            with urllib.request.urlopen(url, timeout=10) as r:
+              data = json.load(r)
+            ts = data["value"]["timeSeries"]
+            if ts:
+              for s in ts:
+                code = s["variable"]["variableCode"][0]["value"]
+                vals = s["values"][0]["value"]
+                if vals:
+                  v   = float(vals[-1]["value"])
+                  dt  = vals[-1]["dateTime"]
+                  if code == "00060" and v > -9000:
+                    result["flow_cfs"]  = round(v)
+                    result["timestamp"] = dt
+                    result["source"]    = "waterservices"
+                  elif code == "00065" and v > -9000:
+                    result["gauge_ft"]  = round(v, 2)
+              print("WaterServices OK:", result)
+          except Exception as e:
+            print("WaterServices failed:", e)
+
+          # ── Attempt 2: new OGC API (if legacy returned nothing) ──
+          if result["flow_cfs"] is None:
+            try:
+              url = ("https://api.waterdata.usgs.gov/ogcapi/v0/collections/"
+                     "continuous/items?monitoring_location_id=USGS-05406000"
+                     "&parameter_code=00060&parameter_code=00065&time=P1D&f=json")
+              with urllib.request.urlopen(url, timeout=10) as r:
+                data = json.load(r)
+              features = data.get("features", [])
+              latest = {}
+              for f in features:
+                p = f.get("properties", {})
+                code = p.get("parameter_code")
+                t    = p.get("time", "")
+                if code not in latest or t > latest[code]["time"]:
+                  latest[code] = {"value": p.get("value"), "time": t}
+              for code, info in latest.items():
+                v = float(info["value"]) if info["value"] is not None else None
+                if v is None or v < -9000:
+                  continue
+                if code == "00060":
+                  result["flow_cfs"]  = round(v)
+                  result["timestamp"] = info["time"]
+                  result["source"]    = "new-api"
+                elif code == "00065":
+                  result["gauge_ft"]  = round(v, 2)
+              print("New API result:", result)
+            except Exception as e:
+              print("New API failed:", e)
+
+          # ── Always write data.json (even if both failed — HTML handles nulls) ──
+          result["fetched_at"] = datetime.datetime.utcnow().isoformat() + "Z"
+          with open("data.json", "w") as f:
+            json.dump(result, f, indent=2)
+          print("Wrote data.json:", result)
+          PYEOF
+
+      - name: Commit updated data.json
+        run: |
+          git config user.email "river-bot@github-actions"
+          git config user.name  "River Data Bot"
+          git add data.json
+          git diff --staged --quiet \
+            || git commit -m "chore: river data update $(date -u +'%H:%M UTC')" \
+            && git push
