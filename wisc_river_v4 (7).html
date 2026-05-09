@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WISC-RIVER-ANALYSIS v4.0 // SAUK CITY</title>
+<style>
+/* ═══════════════════════════════════════════════════════
+   PALETTE: NEON MATRIX TERMINAL
+   Derived from ANSI terminal color table (image ref)
+   ▓ BG      #030403  near-pure black w/ green tint
+   ▓ TEXT    #1eaa30  matrix green base
+   ▓ BRIGHT  #33ff55  phosphor bright
+   ▓ LEG     #ffee22  neon yellow   [ANSI 33 bold]
+   ▓ EPIC    #dd33ff  hot magenta   [ANSI 35 bold]
+   ▓ RARE    #22bbff  electric cyan [ANSI 36 bold]
+   ▓ UNCOM   #22ff66  matrix green  [ANSI 32 bold]
+   ▓ COM     #777777  terminal gray [ANSI 37]
+   ═══════════════════════════════════════════════════════ */
+:root {
+  --bg:      #000000;
+  --bg1:     #050605;
+  --bg2:     #070807;
+  --bg3:     #090b09;
+  --border:  #0c190c;
+  --border2: #112211;
+  --dim:     #1a381a;
+  --muted:   #235e2e;
+  --text:    #1eaa30;
+  --bright:  #2ddd45;
+  --mint:    #44ff66;
+  --forest:  #22ff66;
+  --espresso:#110806;
+  --brown:   #2a1000;
+  --copper:  #ff8844;
+  --tan:     #ffdd55;
+  --gold:    #ffee22;
+  --cursor:  #33ff55;
+  --leg:     #ffee22;
+  --epic:    #dd33ff;
+  --rare:    #22bbff;
+  --uncom:   #22ff66;
+  --com:     #777777;
+  --warn:    #ffaa00;
+  --danger:  #ff3322;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background:
+    radial-gradient(ellipse at 0% 0%,   #0a1a0a 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 0%, #060606 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%,#060f06 0%, transparent 60%),
+    var(--bg);
+  font-family:'Courier New', Courier, monospace;
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px 14px 60px;
+  font-size:15px;
+  line-height:1.5;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px
+  );
+  z-index:0;
+}
+body > * { position:relative; z-index:1; }
+
+/* ─── BOX CHROME ─── */
+.abox {
+  width:100%; max-width:1000px;
+  border:1px solid var(--border2);
+  background:var(--bg1);
+  margin-bottom:6px;
+}
+.abox-head {
+  display:flex; align-items:center;
+  padding:4px 10px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg, #050905, #040604);
+  color:var(--dim);
+  font-size:0.84rem; letter-spacing:0.05em;
+  overflow:hidden; white-space:nowrap;
+}
+.abox-head .htitle { color:var(--copper); letter-spacing:0.1em; padding:0 8px; white-space:nowrap; }
+.abox-head .hfill  { color:var(--border); flex:1; overflow:hidden; }
+
+/* ─── SITE HEADER ─── */
+.site-header { width:100%; max-width:1000px; margin-bottom:14px; }
+.title-box {
+  border:1px solid var(--border2);
+  background:linear-gradient(180deg, #040704 0%, #060806 100%);
+}
+.title-bar { color:var(--border2); font-size:0.84rem; padding:4px 10px 0; white-space:pre; }
+.title-main {
+  font-size:1.18rem; letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--tan); padding:8px 14px 2px; display:block;
+  text-shadow:0 0 18px #ffdd5530;
+}
+.title-sub {
+  font-size:0.80rem; letter-spacing:0.1em;
+  color:var(--muted); padding:0 14px 6px; display:block;
+}
+.title-stats { padding:4px 14px 8px; font-size:0.99rem; color:var(--dim); }
+.stat-chip { display:inline-block; margin-right:14px; }
+.stat-chip::before { content:'[ '; color:var(--forest); }
+.stat-chip::after  { content:' ]'; color:var(--forest); }
+.stat-chip span    { color:var(--bright); }
+
+/* ─── CONDITIONS PANEL ─── */
+.cond-body { padding:14px 16px 16px; }
+.cond-sysline {
+  font-size:0.78rem; color:var(--dim); letter-spacing:0.06em;
+  margin-bottom:12px; padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.cond-sysline span { color:var(--bright); }
+
+.cond-layout {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 24px;
+}
+@media(max-width:680px){ .cond-layout{ grid-template-columns:1fr; } }
+
+.cond-section-label {
+  font-size:0.72rem; letter-spacing:0.10em; color:var(--dim);
+  text-transform:uppercase; margin-bottom:8px;
+}
+
+.cond-row {
+  display:grid; grid-template-columns:110px 130px 1fr;
+  align-items:center; gap:6px;
+  margin-bottom:7px; font-size:0.84rem;
+}
+.cond-label {
+  color:var(--cursor); letter-spacing:0.04em; white-space:nowrap;
+}
+.cond-label::before { content:'> '; color:var(--dim); }
+
+.cond-input {
+  background:transparent;
+  border:none; border-bottom:1px solid var(--border2);
+  color:var(--mint);
+  font-family:'Courier New', monospace; font-size:0.84rem;
+  padding:1px 4px; width:100%;
+  outline:none; letter-spacing:0.04em;
+  caret-color:var(--cursor);
+  transition:border-color 0.15s;
+}
+.cond-input:focus { border-bottom-color:var(--bright); }
+.cond-input::placeholder { color:var(--border2); }
+
+.cond-select {
+  background:var(--bg);
+  border:1px solid var(--border2);
+  color:var(--mint);
+  font-family:'Courier New', monospace; font-size:0.84rem;
+  padding:1px 6px; width:100%;
+  outline:none; cursor:pointer;
+  letter-spacing:0.04em;
+}
+.cond-unit {
+  font-size:0.75rem; color:var(--muted); letter-spacing:0.06em; white-space:nowrap;
+}
+.cond-hotline {
+  font-size:0.74rem; color:var(--border2); letter-spacing:0.05em;
+  margin-top:10px; padding-top:8px; border-top:1px solid var(--border);
+}
+.cond-hotline span { color:var(--copper); }
+
+/* ─── SCORE OUTPUT ─── */
+.score-panel {
+  border-top:1px solid var(--border); padding:14px 16px;
+  display:grid; grid-template-columns:280px 1fr; gap:0 24px;
+  align-items:start;
+}
+@media(max-width:600px){ .score-panel{ grid-template-columns:1fr; } }
+
+.score-left {}
+.score-number {
+  font-size:2.4rem; font-weight:bold; letter-spacing:0.02em;
+  font-family:'Courier New', monospace;
+  line-height:1;
+}
+.score-label {
+  font-size:0.70rem; letter-spacing:0.14em; text-transform:uppercase;
+  margin-top:3px;
+}
+.score-bar-wrap {
+  margin-top:8px; font-size:0.90rem; font-family:'Courier New', monospace;
+  letter-spacing:-0.01em; color:var(--bright);
+}
+.moon-line {
+  font-size:0.78rem; color:var(--muted); letter-spacing:0.06em; margin-top:6px;
+}
+
+.score-right {
+  border-left:1px solid var(--border); padding-left:20px;
+}
+@media(max-width:600px){
+  .score-right{ border-left:none; padding-left:0; border-top:1px solid var(--border); padding-top:12px; margin-top:12px; }
+}
+.factors-label {
+  font-size:0.72rem; color:var(--dim); letter-spacing:0.10em; text-transform:uppercase; margin-bottom:8px;
+}
+.factor-row {
+  display:flex; align-items:flex-start; gap:8px;
+  font-size:0.80rem; margin-bottom:4px; line-height:1.4;
+}
+.f-icon { font-size:0.80rem; flex-shrink:0; margin-top:1px; }
+.f-text { color:var(--text); }
+.f-pos  { color:var(--uncom); }
+.f-neg  { color:var(--danger); }
+.f-neu  { color:var(--muted); }
+
+/* ─── TACTICAL ADVISORY ─── */
+.advisory-panel {
+  border-top:1px solid var(--border); padding:12px 16px;
+}
+.advisory-header {
+  font-size:0.72rem; color:var(--dim); letter-spacing:0.10em;
+  text-transform:uppercase; margin-bottom:10px;
+  padding-bottom:4px; border-bottom:1px solid var(--border);
+}
+.adv-row {
+  display:grid; grid-template-columns:130px 1fr;
+  gap:6px; margin-bottom:7px; font-size:0.81rem; line-height:1.5;
+}
+.adv-label { color:var(--cursor); letter-spacing:0.04em; padding-top:1px; white-space:nowrap; }
+.adv-text  { color:var(--text); }
+.adv-placeholder { font-size:0.80rem; color:var(--border2); font-style:italic; letter-spacing:0.04em; }
+
+/* ─── DIVIDERS ─── */
+.divider {
+  width:100%; max-width:1000px;
+  color:var(--border2); font-size:0.80rem;
+  overflow:hidden; white-space:nowrap;
+  margin:14px 0 10px; user-select:none;
+  letter-spacing:0.01em;
+}
+
+/* ─── RARITY KEY ─── */
+.rarity-key {
+  display:flex; flex-wrap:wrap; gap:0;
+  background:linear-gradient(90deg, #050905, #040604);
+}
+.rarity-chip {
+  padding:5px 14px; font-size:0.77rem; letter-spacing:0.07em;
+  border-right:1px solid var(--border);
+}
+.rarity-chip:last-child { border-right:none; }
+
+/* ─── TABS ─── */
+.tab-strip {
+  display:flex; flex-wrap:wrap; gap:2px;
+  width:100%; max-width:1000px; margin-bottom:0;
+}
+.tab-btn {
+  font-family:'Courier New', monospace;
+  font-size:0.79rem; letter-spacing:0.08em; text-transform:uppercase;
+  padding:5px 12px;
+  background:var(--bg); color:var(--dim);
+  border:1px solid var(--border); border-bottom:1px solid var(--border2);
+  cursor:pointer; transition:all 0.1s;
+  border-radius:0; position:relative; z-index:1;
+}
+.tab-btn::before { content:'[ '; color:var(--border2); }
+.tab-btn::after  { content:' ]'; color:var(--border2); }
+.tab-btn:hover { color:var(--bright); background:var(--bg2); border-color:var(--border2); }
+.tab-btn.active {
+  background:var(--bg2); color:var(--copper);
+  border-color:var(--border2); border-bottom:1px solid var(--bg2);
+  z-index:3;
+}
+.tab-btn.active::before { content:'[> '; color:var(--cursor); }
+.tab-btn.active::after  { content:' <]'; color:var(--cursor); }
+
+/* ─── TAB CONTENT ─── */
+.tab-content {
+  width:100%; max-width:1000px;
+  background:var(--bg2);
+  border:1px solid var(--border2); border-top:none;
+  position:relative; z-index:2; margin-bottom:6px;
+}
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+/* ─── FISH GRID ─── */
+.fish-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
+  gap:1px; background:var(--border);
+}
+
+/* ─── FISH CARD ─── */
+.fish-card {
+  background:var(--bg2); padding:12px 14px;
+  cursor:pointer; transition:background 0.1s;
+  border-left:2px solid var(--border);
+}
+.fish-card:hover  { background:var(--bg3); border-left-color:var(--rc, var(--dim)); }
+.fish-card.expanded { background:var(--bg3); border-left-color:var(--rc, var(--copper)); }
+.card-head { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+.card-icon { font-family:'Courier New', monospace; font-size:0.86rem; letter-spacing:-0.05em; flex-shrink:0; }
+.card-name { font-size:0.95rem; letter-spacing:0.06em; text-transform:uppercase; flex:1; min-width:120px; }
+.card-rarity { font-size:0.86rem; letter-spacing:0.04em; white-space:nowrap; opacity:0.85; flex-shrink:0; }
+.card-meta { font-size:0.76rem; color:var(--muted); margin-top:5px; line-height:1.45; }
+.card-hint { font-size:0.70rem; color:var(--border2); margin-top:5px; letter-spacing:0.04em; }
+.card-tips { display:none; margin-top:10px; }
+.fish-card.expanded .card-tips { display:block; }
+.fish-card.expanded .card-hint { display:none; }
+.tips-header {
+  font-size:0.72rem; color:var(--dim); letter-spacing:0.06em;
+  margin-bottom:8px; padding-bottom:4px; border-bottom:1px solid var(--border);
+}
+.tip-row {
+  display:grid; grid-template-columns:120px 1fr;
+  gap:6px; margin-bottom:6px; font-size:0.81rem; line-height:1.5;
+}
+.tip-label { color:var(--cursor); letter-spacing:0.04em; padding-top:1px; white-space:nowrap; font-size:0.99rem; }
+.tip-text  { color:var(--text); }
+
+/* ─── SEASON PIPS ─── */
+.season-bar { display:flex; gap:3px; margin-top:10px; flex-wrap:wrap; }
+.season-pip {
+  font-size:0.70rem; padding:1px 7px;
+  border:1px solid; letter-spacing:0.04em; text-transform:uppercase;
+}
+.s-hot  { border-color:#22ff66; color:#33ff77; background:#031208; }
+.s-ok   { border-color:#1a6630; color:#226630; background:#050c05; }
+.s-cold { border-color:#112211; color:#1a331a; background:#040804; }
+
+/* ─── FOOTER ─── */
+.footer-note {
+  font-size:0.70rem; color:var(--border2); text-align:center;
+  letter-spacing:0.06em; margin-top:8px; max-width:1000px; width:100%;
+}
+/* ─── BG ASCII ART ─── */
+.bg-ascii {
+  position:fixed; inset:0;
+  z-index:0 !important;
+  pointer-events:none; overflow:hidden;
+  display:flex; flex-direction:column; justify-content:space-around;
+  opacity:0.045;
+}
+.bg-ascii-row {
+  font-family:'Courier New',Courier,monospace;
+  font-weight:900;
+  font-size:calc(100vh / 13.5);
+  color:#00ff44;
+  white-space:nowrap; overflow:hidden;
+  line-height:1; letter-spacing:-0.03em;
+  user-select:none;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ ASCII BACKGROUND ══════ -->
+<div class="bg-ascii" aria-hidden="true">
+  <div class="bg-ascii-row">WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW</div>
+  <div class="bg-ascii-row">IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII</div>
+  <div class="bg-ascii-row">LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL</div>
+  <div class="bg-ascii-row">LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL</div>
+  <div class="bg-ascii-row" style="opacity:0.3;">&nbsp;</div>
+  <div class="bg-ascii-row">EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE</div>
+  <div class="bg-ascii-row">DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD</div>
+  <div class="bg-ascii-row">WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW</div>
+  <div class="bg-ascii-row">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA</div>
+  <div class="bg-ascii-row">RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR</div>
+  <div class="bg-ascii-row">DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD</div>
+  <div class="bg-ascii-row">SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS</div>
+</div>
+
+<div class="site-header">
+  <div class="title-box">
+    <div class="title-bar">+==============================================================+</div>
+    <span class="title-main">  WISCONSIN RIVER  //  SAUK CITY, WI</span>
+    <span class="title-sub">  CONDITIONS ANALYZER + SPECIES DATABASE  |  BELOW PRAIRIE DU SAC DAM  |  MAY 2026</span>
+    <div class="title-stats">
+      <span class="stat-chip">GAUGE: <span>05406000</span></span>
+      <span class="stat-chip">SPECIES: <span>12</span></span>
+      <span class="stat-chip">SOURCE: <span>WI DNR + LOCAL</span></span>
+      <span class="stat-chip">VER: <span>4.0</span></span>
+    </div>
+    <div class="title-bar">+==============================================================+</div>
+  </div>
+</div>
+
+<!-- ══════ CONDITIONS PANEL ══════ -->
+<div class="abox">
+  <div class="abox-head">
+    <span style="color:var(--border2)">+--[</span>
+    <span class="htitle">SECTION 01 // LIVE CONDITIONS ANALYZER</span>
+    <span class="hfill">──────────────────────────────────────────────────────────────</span>
+    <span style="color:var(--border2)">+</span>
+  </div>
+
+  <div class="cond-body">
+    <div class="cond-sysline">
+      SYS_TIME: <span id="sys-time">--</span>&nbsp;&nbsp;|&nbsp;&nbsp;
+      LOCATION: <span>PRAIRIE DU SAC DAM TAILWATER</span>&nbsp;&nbsp;|&nbsp;&nbsp;
+      MOON: <span id="sys-moon">CALCULATING...</span>&nbsp;&nbsp;|&nbsp;&nbsp;
+      DATA: <span id="fetch-status" style="color:var(--dim);">INITIALIZING...</span>
+    </div>
+
+    <div class="cond-layout">
+      <!-- LEFT COLUMN: River data -->
+      <div>
+        <div class="cond-section-label">// RIVER DATA  (USGS 05406000) &nbsp;<span id="river-src" style="color:var(--dim);font-size:0.68rem;"></span></div>
+        <div class="cond-row">
+          <span class="cond-label">FLOW_CFS</span>
+          <input class="cond-input" id="i-flow" type="number" placeholder="e.g. 9200" min="0" max="99999">
+          <span class="cond-unit">cfs</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">GAUGE_FT</span>
+          <input class="cond-input" id="i-gauge" type="number" placeholder="e.g. 4.82" step="0.01" min="0">
+          <span class="cond-unit">ft</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">WATER_TMP</span>
+          <input class="cond-input" id="i-wtemp" type="number" placeholder="e.g. 58" min="32" max="90">
+          <span class="cond-unit">°F</span>
+        </div>
+        <div class="cond-hotline">
+          ALLIANT ENERGY OUTFLOW HOTLINE: <span>1-800-242-1077</span>&nbsp;&nbsp;//&nbsp;&nbsp;CHECK EVERY MORNING
+          &nbsp;&nbsp;&nbsp;<button id="refresh-btn" onclick="fetchLiveData()" style="font-family:'Courier New',monospace;font-size:0.72rem;background:transparent;border:1px solid var(--border2);color:var(--dim);padding:1px 8px;cursor:pointer;letter-spacing:0.06em;" onmouseover="this.style.color='var(--bright)';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='var(--dim)'">[ REFRESH LIVE DATA ]</button>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: Weather data -->
+      <div>
+        <div class="cond-section-label">// WEATHER (PRAIRIE DU SAC, WI) &nbsp;<span id="wx-src" style="color:var(--dim);font-size:0.68rem;"></span></div>
+        <div class="cond-row">
+          <span class="cond-label">AIR_TEMP</span>
+          <input class="cond-input" id="i-atemp" type="number" placeholder="e.g. 62" min="-20" max="110">
+          <span class="cond-unit">°F</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">WIND_MPH</span>
+          <input class="cond-input" id="i-wind" type="number" placeholder="e.g. 8" min="0" max="60">
+          <span class="cond-unit">mph</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">CLOUD_PCT</span>
+          <input class="cond-input" id="i-cloud" type="number" placeholder="e.g. 60" min="0" max="100">
+          <span class="cond-unit">%</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">BARO_HPA</span>
+          <input class="cond-input" id="i-baro" type="number" placeholder="e.g. 1013" min="950" max="1060">
+          <span class="cond-unit">hPa</span>
+        </div>
+        <div class="cond-row">
+          <span class="cond-label">PRESSURE</span>
+          <select class="cond-select" id="i-ptend">
+            <option value="">-- select trend --</option>
+            <option value="falling">▼ FALLING</option>
+            <option value="stable">→ STABLE</option>
+            <option value="rising">▲ RISING</option>
+          </select>
+          <span class="cond-unit"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE OUTPUT -->
+  <div class="score-panel" id="score-section">
+    <div class="score-left">
+      <div class="score-number" id="score-num" style="color:var(--muted);">--</div>
+      <div class="score-label" id="score-label" style="color:var(--dim);">AWAITING DATA</div>
+      <div class="score-bar-wrap" id="score-bar" style="color:var(--dim);">[░░░░░░░░░░░░░░░░░░░░]</div>
+      <div class="moon-line" id="moon-detail"></div>
+    </div>
+    <div class="score-right">
+      <div class="factors-label">// FACTOR ANALYSIS</div>
+      <div id="factors-list" style="color:var(--dim);font-size:0.80rem;">&gt; fetching live conditions...</div>
+    </div>
+  </div>
+
+  <!-- TACTICAL ADVISORY -->
+  <div class="advisory-panel" id="advisory-section">
+    <div class="advisory-header">// TACTICAL ADVISORY — WISCONSIN RIVER BELOW PRAIRIE DU SAC DAM //</div>
+    <div id="advisory-rows">
+      <div class="adv-placeholder">&gt; awaiting data — enter conditions above or wait for live fetch...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ SECTION BREAK ══════ -->
+<div class="divider">==================================================================================================================================</div>
+
+<!-- ══════ FISH DB HEADER ══════ -->
+<div style="width:100%;max-width:1000px;margin-bottom:12px;">
+  <div style="font-size:0.99rem;color:var(--dim);letter-spacing:0.08em;margin-bottom:3px;">//  SECTION 02  //</div>
+  <div style="font-size:1.12rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--tan);text-shadow:0 0 20px #ffdd5530;">FISH SPECIES DATABASE</div>
+  <div style="font-size:0.86rem;color:var(--dim);letter-spacing:0.05em;margin-top:2px;">Wisconsin River — Sauk City / Prairie du Sac reach — click any entry to expand targeting data</div>
+</div>
+
+<!-- ══════ RARITY KEY ══════ -->
+<div class="abox" style="margin-bottom:10px;padding:0;">
+  <div class="abox-head">
+    <span style="color:var(--border2)">+--[</span>
+    <span class="htitle">RARITY CLASSIFICATION</span>
+    <span class="hfill">────────────────────────────────────────────────────────────</span>
+    <span style="color:var(--border2)">+</span>
+  </div>
+  <div class="rarity-key">
+    <span class="rarity-chip" style="color:var(--leg)">[#####] LEGENDARY</span>
+    <span class="rarity-chip" style="color:var(--epic)">[####-] EPIC</span>
+    <span class="rarity-chip" style="color:var(--rare)">[###--] RARE</span>
+    <span class="rarity-chip" style="color:var(--uncom)">[##---] UNCOMMON</span>
+    <span class="rarity-chip" style="color:var(--com)">[#----] COMMON</span>
+  </div>
+</div>
+
+<!-- ══════ TABS ══════ -->
+<div class="tab-strip">
+  <button class="tab-btn active" data-filter="all">ALL SPECIES</button>
+  <button class="tab-btn" data-filter="legendary" style="color:#aa9900">LEGENDARY</button>
+  <button class="tab-btn" data-filter="epic"      style="color:#8822aa">EPIC</button>
+  <button class="tab-btn" data-filter="rare"      style="color:#1177aa">RARE</button>
+  <button class="tab-btn" data-filter="uncommon"  style="color:#118840">UNCOMMON</button>
+  <button class="tab-btn" data-filter="common"    style="color:#555555">COMMON</button>
+</div>
+
+<div class="tab-content">
+  <!-- ALL -->
+  <div class="tab-panel active" id="panel-all">
+    <div class="fish-grid" id="grid-all">
+
+<div class="fish-card" data-rarity="legendary" style="--rc:#ffee22">
+  <div class="card-head">
+    <span class="card-icon" style="color:#ffee22">><(((((o></span>
+    <span class="card-name" style="color:#ffee22">Lake Sturgeon</span>
+    <span class="card-rarity" style="color:#ffee22">[#####] LEGENDARY</span>
+  </div>
+  <div class="card-meta">To 6ft / 100+lbs  |  C&R only through June 5  |  Highly regulated — CLOSED until June 6</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; REGS NOW:</span><span class="tip-text">CLOSED until June 6, 2026. Even catch-and-release is prohibited. Release any accidental hookups immediately and carefully.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; LOCATION:</span><span class="tip-text">Deep south channel below the sandbar. Alliant Energy flow line 800-242-1077 — ~5,000 cfs is prime. Check every morning before launching.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; ANCHORING:</span><span class="tip-text">Heavy anchor is non-negotiable. A drifting boat pulls bait away instantly. Two anchors in wind prevents swinging into other anglers.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BAIT:</span><span class="tip-text">Two full nightcrawlers for numbers. Cut sucker or redhorse for big fish — stays on hook longer. Replace every 10-15 min.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BITE:</span><span class="tip-text">Subtle rod-tip bounce — nothing like you expect. Do NOT yank. Sweep back firmly then set again. Rubbery mouths shed hooks on a weak set.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; GEAR:</span><span class="tip-text">7-9ft fiberglass rod, sensitive tip — NOT a stiff muskie blank. 50-65lb braid. 4/0-5/0 circle hooks. Soft tip detects the feather-light bite stiff rods miss.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-ok">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="legendary" style="--rc:#ffee22">
+  <div class="card-head">
+    <span class="card-icon" style="color:#ffee22">>>-<((((o></span>
+    <span class="card-name" style="color:#ffee22">Muskellunge</span>
+    <span class="card-rarity" style="color:#ffee22">[#####] LEGENDARY</span>
+  </div>
+  <div class="card-meta">To 50+ inches  |  50" min  |  Season opened May 2, 2026  |  Fish of 10,000 casts</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; STATUS:</span><span class="tip-text">Strong comeback on Lower WI River. Not primary target but real possibility every trip — always have one rod rigged. Season just opened May 2.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TROLLING:</span><span class="tip-text">Troll crankbaits 1-2mph in an S-pattern. Shad Raps, Flicker Shads, Wally Divers. Keep it bouncing bottom. Speed variation through turns triggers reaction strikes.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; CASTING:</span><span class="tip-text">Large spinnerbaits and billed crankbaits tight to logs, timber, rock, and behind islands. Back of sandbars and current seams near wood are prime ambush points.</span></div>
+    <div class="season-bar"><span class="season-pip s-ok">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="epic" style="--rc:#dd33ff">
+  <div class="card-head">
+    <span class="card-icon" style="color:#dd33ff">~><((((o></span>
+    <span class="card-name" style="color:#dd33ff">Flathead Catfish</span>
+    <span class="card-rarity" style="color:#dd33ff">[####-] EPIC     </span>
+  </div>
+  <div class="card-meta">To 50+ lbs  |  Season opens May 3  |  Strictly nocturnal hunter</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; DAYTIME:</span><span class="tip-text">Hold motionless in deepest darkest water — outer scour bank and deep south channel. Under root wads and undercut banks during daylight.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; NIGHTTIME:</span><span class="tip-text">Move aggressively onto sandbar edges and shallow flats after dark. Prime window: 10pm-3am in summer. Work sandbar margins.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BAIT:</span><span class="tip-text">LIVE BAIT ONLY. Bullheads, creek chubs, large shad, live bluegill where legal. Dead bait is channel cat food. Large bait = large fish.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; RIG:</span><span class="tip-text">3-way rig or slip sinker to bottom. Circle hooks 5/0-8/0. Let fish eat before engaging drag. 2 rods per angler allowed on WI River.</span></div>
+    <div class="season-bar"><span class="season-pip s-ok">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="epic" style="--rc:#dd33ff">
+  <div class="card-head">
+    <span class="card-icon" style="color:#dd33ff">><(((o></span>
+    <span class="card-name" style="color:#dd33ff">Shovelnose Sturgeon</span>
+    <span class="card-rarity" style="color:#dd33ff">[####-] EPIC     </span>
+  </div>
+  <div class="card-meta">Smaller cousin of lake sturgeon  |  Frequent accidental catch  |  Year-round below dam</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; OVERVIEW:</span><span class="tip-text">Much more common than lake sturgeon on this reach. Frequently caught accidentally. Fight hard and are excellent table fare.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TECHNIQUE:</span><span class="tip-text">Same rig and bait as lake sturgeon — nightcrawlers on a slip sinker in the deep south channel. Found in slightly shallower / faster current.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; SEASON:</span><span class="tip-text">Present year-round in tailwater below Prairie du Sac Dam. Spring run concentrations are highest. Check current regs.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-ok">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="rare" style="--rc:#22bbff">
+  <div class="card-head">
+    <span class="card-icon" style="color:#22bbff">-><((o></span>
+    <span class="card-name" style="color:#22bbff">Walleye</span>
+    <span class="card-rarity" style="color:#22bbff">[###--] RARE     </span>
+  </div>
+  <div class="card-meta">18" min  |  3-fish combined bag w/ sauger  |  Most targeted below dam</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; SPRING RUN:</span><span class="tip-text">Significant walleye push upstream to the Prairie du Sac tailwater late fall through spring. Post-spawn fish actively feeding in May — best window of the year.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; EDDY SEAM:</span><span class="tip-text">Textbook walleye water. Fish the seam where slow and fast water meet. 1/8-1/4oz jig with fathead minnow, dead-drift and barely tick bottom.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TROLLING:</span><span class="tip-text">Troll 1-2mph in an S-pattern. Use 10lb green monofilament — NOT braid. Shad Raps, Flicker Shads, Wally Divers bumping bottom.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; NIGHT:</span><span class="tip-text">Early spring and summer: walleye move to shallow shoreline after dark. Shallow-diving crankbaits along south bank near sandbar edge produce.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; COLD FRONT:</span><span class="tip-text">Cold fronts barely affect WI River walleye. They must eat daily against current. Fish confidently after fronts that shut down lake fish completely.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-ok">Fall</span><span class="season-pip s-hot">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="rare" style="--rc:#22bbff">
+  <div class="card-head">
+    <span class="card-icon" style="color:#22bbff">-><(o></span>
+    <span class="card-name" style="color:#22bbff">Sauger</span>
+    <span class="card-rarity" style="color:#22bbff">[###--] RARE     </span>
+  </div>
+  <div class="card-meta">15" min  |  Combined w/ walleye/saugeye: 3-fish bag  |  Deeper than walleye</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; DEPTH:</span><span class="tip-text">Relate to deeper water than walleye. Focus deep south channel and outer bank scour. DNR creel surveys: sauger = 33% of combined walleye/sauger catch here.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TECHNIQUE:</span><span class="tip-text">Deep-diving crankbaits and jig-and-twister combos worked low and slow. Less willing to rise than walleye — keep presentation digging the bottom.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; WINTER:</span><span class="tip-text">Tailwater below Prairie du Sac stays ice-free all winter. Sauger stack in deep holes. Small jigs tipped with minnows produce well in the scour hole.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-hot">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="uncommon" style="--rc:#22ff66">
+  <div class="card-head">
+    <span class="card-icon" style="color:#22ff66">(-<(o-></span>
+    <span class="card-name" style="color:#22ff66">Smallmouth Bass</span>
+    <span class="card-rarity" style="color:#22ff66">[##---] UNCOMMON </span>
+  </div>
+  <div class="card-meta">14" min  |  C&R only until June 20  |  All natural reproduction  |  Peak May-June</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; RIGHT NOW:</span><span class="tip-text">Actively staging and feeding as water temps climb through May. Harvest opens June 20 — C&R only currently. Look for shiners breaking surface — smallmouth are directly below.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BAIT:</span><span class="tip-text">Live shiners are deadly right now. Local reports confirm smallmouth ignore tube jigs when chasing baitfish. Match the hatch. Fatheads on light jig head also produce.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; STRUCTURE:</span><span class="tip-text">Rocky shoreline, submerged logs, back edges of sandbars, any current break. LWR is known for exceptional natural smallmouth production.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BOAT:</span><span class="tip-text">Jon boat, canoe, or kayak ideal — you reach structure a bass boat cannot navigate in this shallow, snag-filled river.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-ok">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="uncommon" style="--rc:#22ff66">
+  <div class="card-head">
+    <span class="card-icon" style="color:#22ff66">>>-<((--></span>
+    <span class="card-name" style="color:#22ff66">Northern Pike</span>
+    <span class="card-rarity" style="color:#22ff66">[##---] UNCOMMON </span>
+  </div>
+  <div class="card-meta">26" min to keep  |  Spring and fall peak  |  Always be ready</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TIMING:</span><span class="tip-text">April-May are the best months. Fall extends into October. Always possible — keep a rod rigged with a wire leader at all times.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; LURES:</span><span class="tip-text">Large flashy spoons, spinners, bright crankbaits, soft plastic swimbaits retrieved erratically. Troll weed edges and current seams.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; WIRE LEADER:</span><span class="tip-text">Often caught targeting walleye and smallmouth. Always carry wire leader material — pike bite through fluorocarbon instantly. No exceptions.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="common" style="--rc:#777777">
+  <div class="card-head">
+    <span class="card-icon" style="color:#777777">~><(></span>
+    <span class="card-name" style="color:#777777">Channel Catfish</span>
+    <span class="card-rarity" style="color:#777777">[#----] COMMON   </span>
+  </div>
+  <div class="card-meta">Abundant  |  Season: May 3 – Nov 30 on this stretch  |  10/day  |  Excellent table fare</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; OVERVIEW:</span><span class="tip-text">Throughout this reach, readily caught on wide variety of baits. Season just opened May 3. Much more active during daylight than flathead catfish.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BAIT:</span><span class="tip-text">Nightcrawlers, stink bait, chicken liver, cut shad, prepared catfish bait. 3-way rig or slip sinker to bottom anywhere in the main channel.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; LOCATIONS:</span><span class="tip-text">Any deep hole, behind sandbars, below dam structure, along main channel edge. They find the bait — easiest way to guarantee fish on this river.</span></div>
+    <div class="season-bar"><span class="season-pip s-ok">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="common" style="--rc:#777777">
+  <div class="card-head">
+    <span class="card-icon" style="color:#777777">)-<(-></span>
+    <span class="card-name" style="color:#777777">White Bass</span>
+    <span class="card-rarity" style="color:#777777">[#----] COMMON   </span>
+  </div>
+  <div class="card-meta">Spawning run April-May  |  Aggressive schooling feeders  |  No size/bag limit</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; SPRING RUN:</span><span class="tip-text">Spawning migration every April-May — RIGHT NOW. Schools push upstream below dam and create fast action — when you find them they bite almost anything.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TECHNIQUE:</span><span class="tip-text">Small white or chartreuse jigs, inline spinners, or small crankbaits. Cast ahead of surface activity and retrieve fast.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; FINDING:</span><span class="tip-text">Look for surface commotion and diving birds. DNR creel surveys: white bass = 3rd most caught species at 6.5% of total catch below Prairie du Sac.</span></div>
+    <div class="season-bar"><span class="season-pip s-hot">Spring</span><span class="season-pip s-ok">Summer</span><span class="season-pip s-cold">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="common" style="--rc:#777777">
+  <div class="card-head">
+    <span class="card-icon" style="color:#777777">(><)</span>
+    <span class="card-name" style="color:#777777">Freshwater Drum</span>
+    <span class="card-rarity" style="color:#777777">[#----] COMMON   </span>
+  </div>
+  <div class="card-meta">Sheepshead  |  2nd most caught: 8.7% of creel  |  Underrated fighter</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; OVERVIEW:</span><span class="tip-text">Most underrated fish in the WI River. Fight hard, eat off the bottom same as walleye and catfish — much easier to catch in numbers.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; CATCH RATE:</span><span class="tip-text">DNR creel data: 8.7% of total catch below Prairie du Sac — 2nd only to bluegill. Bait on the bottom = you will catch drum.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; BAIT:</span><span class="tip-text">Nightcrawlers and minnows on the bottom. Same setup as walleye or catfish. Not picky. Great backup when walleye are slow.</span></div>
+    <div class="season-bar"><span class="season-pip s-ok">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-ok">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+<div class="fish-card" data-rarity="common" style="--rc:#777777">
+  <div class="card-head">
+    <span class="card-icon" style="color:#777777">(><)</span>
+    <span class="card-name" style="color:#777777">Bluegill / Panfish</span>
+    <span class="card-rarity" style="color:#777777">[#----] COMMON   </span>
+  </div>
+  <div class="card-meta">Most caught by volume  |  8-9"+ fish in good areas  |  Oct is prime</div>
+  <div class="card-hint">&gt; press to expand targeting tips</div>
+  <div class="card-tips">
+    <div class="tips-header">// TARGETING TIPS -- WISCONSIN RIVER, SAUK CITY //</div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; OVERVIEW:</span><span class="tip-text">Most caught species by total count in DNR creel surveys. Excellent action in slower backwater pockets, eddy margins, and along shoreline brush.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; TIMING:</span><span class="tip-text">Early October produces exceptional bluegill sizes. First week of October noted by local anglers as particularly reliable for 8-9 inch fish.</span></div>
+    <div class="tip-row"><span class="tip-label">&gt;&gt; GEAR:</span><span class="tip-text">Light spinning or ultralight rod with small jigs, worms, or wax worms under a small bobber. Focus slower water edges and slack zones near dam.</span></div>
+    <div class="season-bar"><span class="season-pip s-ok">Spring</span><span class="season-pip s-hot">Summer</span><span class="season-pip s-hot">Fall</span><span class="season-pip s-cold">Winter</span></div>
+  </div>
+</div>
+
+    </div><!-- #grid-all -->
+  </div><!-- panel-all -->
+
+  <div class="tab-panel" id="panel-legendary"><div class="fish-grid" data-rarity-grid="legendary"></div></div>
+  <div class="tab-panel" id="panel-epic"     ><div class="fish-grid" data-rarity-grid="epic"></div></div>
+  <div class="tab-panel" id="panel-rare"     ><div class="fish-grid" data-rarity-grid="rare"></div></div>
+  <div class="tab-panel" id="panel-uncommon" ><div class="fish-grid" data-rarity-grid="uncommon"></div></div>
+  <div class="tab-panel" id="panel-common"   ><div class="fish-grid" data-rarity-grid="common"></div></div>
+</div>
+
+<!-- ══════ FOOTER ══════ -->
+<div class="divider" style="margin-top:24px;">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</div>
+<div class="footer-note">
+  // WISC-RIVER-ANALYSIS v4.0  |  DATA: WI DNR CREEL SURVEYS + LOCAL KNOWLEDGE  |  ALLIANT ENERGY OUTFLOW: 1-800-242-1077  |  VERIFY DNR REGS BEFORE FISHING //
+</div>
+
+<script>
+(function () {
+
+  /* ─── SYSTEM TIME + MOON ─── */
+  function moonPhase() {
+    var d = new Date();
+    var y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+    if (m < 3) { y--; m += 12; }
+    var jd = Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + day - 1524.5;
+    return ((((jd-2451550.1)/29.530588)%1)+1)%1;
+  }
+  function moonName(p) {
+    if (p<0.0625||p>=0.9375) return {n:'NEW MOON',g:true};
+    if (p<0.1875) return {n:'WAXING CRESCENT',g:true};
+    if (p<0.3125) return {n:'FIRST QUARTER',g:false};
+    if (p<0.4375) return {n:'WAXING GIBBOUS',g:false};
+    if (p<0.5625) return {n:'FULL MOON',g:true};
+    if (p<0.6875) return {n:'WANING GIBBOUS',g:false};
+    if (p<0.8125) return {n:'LAST QUARTER',g:false};
+    return {n:'WANING CRESCENT',g:true};
+  }
+
+  var mp = moonPhase();
+  var mn = moonName(mp);
+  var now = new Date();
+  var days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  document.getElementById('sys-time').textContent =
+    days[now.getDay()]+' '+months[now.getMonth()]+' '+now.getDate()+' '+now.getFullYear()+'  '+
+    now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  var moonEl = document.getElementById('sys-moon');
+  moonEl.textContent = mn.n + ' (' + Math.round(mp*100) + '% CYCLE)';
+  moonEl.style.color = mn.g ? 'var(--uncom)' : 'var(--muted)';
+
+  /* ─── SCORE ENGINE ─── */
+  function getVal(id) { var v = parseFloat(document.getElementById(id).value); return isNaN(v) ? null : v; }
+  function getSelect(id) { return document.getElementById(id).value || null; }
+
+  function scoreBar(s, w) {
+    w = w||20;
+    var f = Math.round((s/10)*w);
+    return '[' + '█'.repeat(f) + '░'.repeat(w-f) + ']';
+  }
+
+  function scoreColor(s) {
+    return s>=7.5 ? 'var(--uncom)' : s>=5 ? 'var(--warn)' : 'var(--danger)';
+  }
+  function scoreWord(s) {
+    if (s>=8.5) return 'EXCEPTIONAL';
+    if (s>=7.0) return 'EXCELLENT';
+    if (s>=5.5) return 'GOOD';
+    if (s>=4.0) return 'FAIR';
+    return 'POOR';
+  }
+
+  function calcScore() {
+    var flow   = getVal('i-flow');
+    var wtemp  = getVal('i-wtemp');
+    var cloud  = getVal('i-cloud');
+    var wind   = getVal('i-wind');
+    var ptend  = getSelect('i-ptend');
+    var s = 5.0;
+    var factors = [];
+
+    if (flow !== null) {
+      if (flow>=5000&&flow<=12000){s+=1.5;factors.push({t:'Ideal flow ('+flow.toLocaleString()+' cfs) — current seams & eddies active',g:1});}
+      else if (flow<=20000){factors.push({t:'Elevated flow ('+flow.toLocaleString()+' cfs) — fish slack water & back eddies',g:0});}
+      else if (flow>20000){s-=1.5;factors.push({t:'High flow ('+flow.toLocaleString()+' cfs) — very challenging',g:-1});}
+      else{s+=0.5;factors.push({t:'Low flow ('+flow.toLocaleString()+' cfs) — structure exposed, fish deep channel',g:0});}
+    }
+    if (wtemp !== null) {
+      if (wtemp>=52&&wtemp<=65){s+=1.5;factors.push({t:'Prime water temp ('+wtemp+'°F) — peak walleye/sauger activity',g:1});}
+      else if (wtemp>=45){s+=0.5;factors.push({t:'Cool water ('+wtemp+'°F) — slow presentation, fish deeper',g:0});}
+      else if (wtemp>65){factors.push({t:'Warm water ('+wtemp+'°F) — shift to dawn/dusk bite',g:0});}
+      else{s-=1;factors.push({t:'Cold water ('+wtemp+'°F) — tough bite, dead-slow presentations only',g:-1});}
+    }
+    if (cloud !== null) {
+      if (cloud>=40&&cloud<=80){s+=1;factors.push({t:'Overcast ('+cloud+'%) — low light, walleye activated',g:1});}
+      else if (cloud>80){s+=0.25;factors.push({t:'Heavy overcast ('+cloud+'%) — favorable low light',g:0});}
+      else{s-=0.5;factors.push({t:'Clear sky ('+cloud+'%) — fish deep structure or wait for dusk',g:-1});}
+    }
+    if (wind !== null) {
+      if (wind<=10){s+=0.5;factors.push({t:'Calm wind ('+wind+' mph) — precise boat control, fish any structure',g:1});}
+      else if (wind>20){s-=0.75;factors.push({t:'Strong wind ('+wind+' mph) — heavy anchor required, drift control difficult',g:-1});}
+      else{factors.push({t:'Moderate wind ('+wind+' mph) — manageable with proper anchor setup',g:0});}
+    }
+    if (ptend) {
+      if (ptend==='falling'){s+=0.75;factors.push({t:'Falling pressure — feeding activity very likely',g:1});}
+      else if (ptend==='rising'){s-=0.25;factors.push({t:'Rising pressure — fish may retreat to deeper water',g:-1});}
+      else{s+=0.25;factors.push({t:'Stable pressure — reliable, steady bite expected',g:0});}
+    }
+    if (mn.g){s+=0.5;factors.push({t:mn.n+' — historically active feeding period',g:1});}
+    else{factors.push({t:mn.n+' — neutral bite influence on moon cycle',g:0});}
+    factors.push({t:'Early May — post-spawn walleye/sauger feeding hard, white bass run active',g:1});
+    s+=0.5;
+
+    return {s: Math.round(Math.max(1,Math.min(10,s))*10)/10, factors:factors};
+  }
+
+  /* ─── ADVISORY GENERATOR ─── */
+  function genAdvisory() {
+    var flow   = getVal('i-flow');
+    var gauge  = getVal('i-gauge');
+    var wtemp  = getVal('i-wtemp');
+    var atemp  = getVal('i-atemp');
+    var wind   = getVal('i-wind');
+    var cloud  = getVal('i-cloud');
+    var ptend  = getSelect('i-ptend');
+    var rows = [];
+
+    // Primary target
+    var primary;
+    if (flow && flow <= 20000 && wtemp && wtemp >= 50 && wtemp <= 65) {
+      primary = 'WALLEYE / SAUGER — post-spawn fish actively feeding. White bass spawning run also producing action below dam.';
+    } else if (wtemp && wtemp > 65) {
+      primary = 'CATFISH (flathead + channel) — water warming, catfish entering prime season. White bass also still active.';
+    } else if (flow && flow > 20000) {
+      primary = 'CATFISH + DRUM — high water pushes walleye downstream. Bottom rigs in back eddies for channel cats and drum.';
+    } else {
+      primary = 'WALLEYE / SAUGER — post-spawn run winding down, fish transitioning downstream to sandflats and rock structure.';
+    }
+    rows.push(['>> PRIMARY TARGET', primary]);
+
+    // Flow advisory
+    if (flow !== null) {
+      var flowAdv;
+      if (flow < 5000) flowAdv = 'Low flow exposing bottom structure. Focus deep south channel and outer scour bank. Fish hold tight to remaining depth.';
+      else if (flow <= 8000) flowAdv = 'Near-ideal flow. Textbook conditions — fish current seams, eddy margins, and the 22ft scour hole directly below dam.';
+      else if (flow <= 12000) flowAdv = 'Ideal range. Work the first back eddy below the dam and current seam edges with vertical jigs. Good drift presentations possible.';
+      else if (flow <= 20000) flowAdv = 'Elevated flow — fish displaced to slack water. Target back eddies directly below dam structure. Heavy anchor required.';
+      else flowAdv = 'Very high flow. Extremely challenging. Fish only the tightest back eddy below dam. Heavy current demands heavier jigs (3/8-1/2oz).';
+      rows.push(['>> FLOW', flowAdv]);
+    }
+
+    // Presentation
+    var pres;
+    if (wtemp && wtemp < 50) pres = 'Dead-slow jigging mandatory. 1/8oz jig + fathead minnow, barely ticking bottom. No aggressive retrieves.';
+    else if (wtemp && wtemp <= 60) pres = '1/8-1/4oz jig + fathead minnow. Dead-drift first, then slow drag. Troll Shad Rap / Wally Diver as secondary. Use 10lb mono NOT braid for trolling.';
+    else pres = '1/4oz jig + minnow or leech. More active retrieve tolerated as temps climb. Dawn / dusk windows most productive in warm, clear conditions.';
+    rows.push(['>> PRESENTATION', pres]);
+
+    // Timing
+    var timing;
+    if (cloud && cloud >= 40) timing = 'Overcast conditions extend feeding window throughout the day. Start at dawn on the scour hole, work eddy margins through morning.';
+    else timing = 'Clear conditions concentrate bite at low-light windows. Dawn ±90 minutes and dusk ±90 minutes. Fish deep water mid-day.';
+    if (ptend === 'falling') timing += ' Falling pressure is active — arrive early and stay late.';
+    rows.push(['>> TIMING', timing]);
+
+    // Critical
+    var critical;
+    if (flow && flow > 15000) critical = 'CALL ALLIANT ENERGY (1-800-242-1077) FIRST. Dam outflow can spike overnight. High water without a heavy anchor is dangerous and unproductive.';
+    else if (wtemp && wtemp >= 52 && wtemp <= 65) critical = 'Water temps are in the prime walleye window. Replace fatheads every 20 min — fresh bait dramatically outproduces old. Dead bait = no bites.';
+    else critical = 'Call Alliant Energy outflow line (1-800-242-1077) every morning. Flow dictates everything on this tailwater — never launch without checking.';
+    rows.push(['>> CRITICAL TIP', critical]);
+
+    // Regs reminder
+    rows.push(['>> REGS NOTE', 'Lake sturgeon CLOSED until June 6. Smallmouth C&R until June 20. Catfish season opened May 3 (10/day). Walleye 18" min (3/day w/ sauger). Musky 50" min.']);
+
+    return rows;
+  }
+
+  /* ─── UPDATE UI ─── */
+  function updateAll() {
+    var result = calcScore();
+    var s = result.s;
+    var col = scoreColor(s);
+    var hasData = ['i-flow','i-wtemp','i-cloud','i-wind'].some(function(id){
+      return document.getElementById(id).value !== '';
+    });
+
+    if (hasData) {
+      document.getElementById('score-num').textContent = s.toFixed(1) + ' / 10';
+      document.getElementById('score-num').style.color = col;
+      document.getElementById('score-label').textContent = scoreWord(s) + ' CONDITIONS';
+      document.getElementById('score-label').style.color = col;
+      document.getElementById('score-bar').textContent = scoreBar(s, 20);
+      document.getElementById('score-bar').style.color = col;
+    }
+    document.getElementById('moon-detail').textContent = '// MOON: ' + mn.n + ' (' + Math.round(mp*100) + '% CYCLE)';
+
+    var fList = document.getElementById('factors-list');
+    fList.style.color = '';
+    fList.innerHTML = result.factors.map(function(f){
+      var cls = f.g===1?'f-pos':f.g===-1?'f-neg':'f-neu';
+      var ico = f.g===1?'[+]':f.g===-1?'[-]':'[·]';
+      return '<div class="factor-row"><span class="f-icon '+cls+'">'+ico+'</span><span class="f-text '+cls+'">'+f.t+'</span></div>';
+    }).join('');
+
+    if (hasData) {
+      var advRows = genAdvisory();
+      document.getElementById('advisory-rows').innerHTML = advRows.map(function(r){
+        return '<div class="adv-row"><span class="adv-label">'+r[0]+'</span><span class="adv-text">'+r[1]+'</span></div>';
+      }).join('');
+    }
+  }
+
+  ['i-flow','i-gauge','i-wtemp','i-atemp','i-wind','i-cloud','i-baro','i-ptend'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', updateAll);
+    document.getElementById(id).addEventListener('change', updateAll);
+  });
+
+  /* ─── LIVE DATA FETCH ─── */
+  /* ── River data now served from data.json (written by GitHub Action every 15 min) ── */
+  async function fetchUSGS() {
+    var r = await fetch('data.json?_=' + Date.now()); // cache-bust
+    if (!r.ok) throw new Error('data.json ' + r.status);
+    return r.json();
+  }
+
+  var WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=43.2836&longitude=-89.7372&current=temperature_2m,wind_speed_10m,wind_direction_10m,cloud_cover,pressure_msl&hourly=pressure_msl&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago&forecast_days=1';
+
+  function setFetchStatus(msg, color) {
+    var el = document.getElementById('fetch-status');
+    el.textContent = msg; el.style.color = color || 'var(--dim)';
+  }
+  function setSrc(id, ok) {
+    var el = document.getElementById(id);
+    el.textContent = ok ? '● LIVE' : '○ OFFLINE';
+    el.style.color  = ok ? 'var(--uncom)' : 'var(--danger)';
+  }
+  function setInput(id, val, decimals) {
+    if (val === null || val === undefined || isNaN(val)) return;
+    document.getElementById(id).value = decimals !== undefined ? parseFloat(val).toFixed(decimals) : Math.round(val);
+  }
+  function setSelect(id, val) {
+    var el = document.getElementById(id);
+    for (var i = 0; i < el.options.length; i++) {
+      if (el.options[i].value === val) { el.selectedIndex = i; return; }
+    }
+  }
+
+  window.fetchLiveData = async function () {
+    var btn = document.getElementById('refresh-btn');
+    btn.textContent = '[ FETCHING... ]'; btn.disabled = true;
+    setFetchStatus('CONNECTING...', 'var(--warn)');
+
+    var results = await Promise.allSettled([
+      fetchUSGS(),
+      fetch(WEATHER_URL, {mode:'cors'}).then(function(r){ return r.json(); })
+    ]);
+
+    var usgsResult = results[0];
+    var wxResult   = results[1];
+    var usgsOk = false, wxOk = false;
+
+    /* — USGS — */
+    if (usgsResult.status === 'fulfilled') {
+      try {
+        var data = usgsResult.value;
+        /* data.json format: { flow_cfs, gauge_ft, timestamp, fetched_at } */
+        console.log('[data.json]', data);
+        if (data.flow_cfs  != null) { setInput('i-flow',  data.flow_cfs,  0); }
+        if (data.gauge_ft  != null) { setInput('i-gauge', data.gauge_ft,  2); }
+        usgsOk = (data.flow_cfs != null || data.gauge_ft != null);
+      } catch(e) { console.error('[data.json] parse error:', e.message); }
+    } else {
+      console.error('[data.json] fetch failed:', usgsResult.reason);
+    }
+    setSrc('river-src', usgsOk);
+
+    /* — WEATHER — */
+    if (wxResult.status === 'fulfilled') {
+      try {
+        var cur = wxResult.value.current || {};
+        setInput('i-atemp', cur.temperature_2m,  0);
+        setInput('i-wind',  cur.wind_speed_10m,   0);
+        setInput('i-cloud', cur.cloud_cover,       0);
+        setInput('i-baro',  cur.pressure_msl,      0);
+        var hp = (wxResult.value.hourly && wxResult.value.hourly.pressure_msl) || [];
+        var h  = new Date().getHours();
+        if (hp.length > h && h >= 2) {
+          var diff = hp[h] - hp[h-2];
+          setSelect('i-ptend', diff > 0.8 ? 'rising' : diff < -0.8 ? 'falling' : 'stable');
+        }
+        wxOk = true;
+      } catch(e) { /* parse error */ }
+    }
+    setSrc('wx-src', wxOk);
+
+    if (usgsOk && wxOk)      setFetchStatus('LIVE — ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 'var(--uncom)');
+    else if (usgsOk || wxOk) setFetchStatus('PARTIAL — ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}), 'var(--warn)');
+    else                     setFetchStatus('OFFLINE — MANUAL ENTRY MODE', 'var(--danger)');
+
+    btn.textContent = '[ REFRESH LIVE DATA ]'; btn.disabled = false;
+    updateAll();
+  };
+
+  /* show moon immediately, then fetch */
+  updateAll();
+  fetchLiveData();
+
+
+  var btns = document.querySelectorAll('.tab-btn');
+  var panels = document.querySelectorAll('.tab-panel');
+  btns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var filter = btn.getAttribute('data-filter');
+      btns.forEach(function(b){ b.classList.remove('active'); });
+      panels.forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('panel-'+filter).classList.add('active');
+    });
+  });
+
+  /* ─── POPULATE RARITY GRIDS ─── */
+  var sourceCards = document.querySelectorAll('#grid-all .fish-card');
+  document.querySelectorAll('[data-rarity-grid]').forEach(function(grid){
+    var rarity = grid.getAttribute('data-rarity-grid');
+    sourceCards.forEach(function(card){
+      if (card.getAttribute('data-rarity') === rarity) {
+        grid.appendChild(card.cloneNode(true));
+      }
+    });
+  });
+
+  /* ─── CARD EXPAND ─── */
+  document.addEventListener('click', function(e){
+    var card = e.target.closest('.fish-card');
+    if (!card) return;
+    var grid = card.closest('.fish-grid');
+    var wasOpen = card.classList.contains('expanded');
+    if (grid) grid.querySelectorAll('.fish-card').forEach(function(c){ c.classList.remove('expanded'); });
+    if (!wasOpen) card.classList.add('expanded');
+  });
+
+})();
+</script>
+</body>
+</html>
